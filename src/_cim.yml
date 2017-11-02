@@ -1,0 +1,68 @@
+version: 0.1
+stack:
+  name: functionci
+  template:
+    file: cloudformation.yml
+    bucket: functionci-artifacts # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'
+  #
+  # Reference parent stacks fo included shared information like stack name.
+  #
+  #parents:
+  #  vpc: '../vpc'
+
+  #
+  # Define stack input parameters.
+  #
+  # Optional - Custom domain name settings.  If you specify 'TLD' you must also specify a 'Domain'.
+  #            After you 'stack-up' you will need to verify your email address so that AWS can issue the SSL certificate for you domain.
+  #            More info here:  http://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate.html
+  parameters:
+    # # The top level domain that you created in Route53.
+    # TLD: 'fnci.io'
+    # # The domain you wish to use for this api.
+    # Domain: 'api.fnci.io'
+    # URI path
+    PATH: 'slack'
+
+#
+# Define stack capabilities required.
+#
+  capabilities:
+    - 'CAPABILITY_IAM'
+
+  #
+  # Define global tags.
+  #
+  tags:
+   app: 'functionci'
+
+lambda:
+  functions:
+    -
+      function: ${stack.outputs.LambdaFunction}
+      zip_file: index.zip
+  deploy:
+    phases:
+      pre_deploy:
+        commands:
+          # Install all npm packages including dev packages.
+          - npm install
+
+          # Run the tests
+          # - npm test
+
+          # Remove all the npm packages.
+          - rm -Rf node_modules
+
+          # Only install the non-dev npm packages.  We don't want to bloat our Lambda with dev packages.
+          - npm install --production
+
+          # Zip the Lambda for upload to S3.
+          - zip -r index.zip .
+      post_deploy:
+        commands:
+          # Remove the zip file.
+          - rm -Rf index.zip
+
+          # Reinstall the dev npm packages.
+          - npm install

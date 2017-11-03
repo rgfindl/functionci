@@ -8,6 +8,7 @@ exports.handler = function(event, context, callback) {
         statusCode: 200,
         body: JSON.stringify({
             message: `Hello CIM`,
+            table: process.env.FunctionCITable,
             event: event
         })
     };

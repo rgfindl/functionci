@@ -1,0 +1,6 @@
+{
+  "keyId" : "<your kms key id>",
+  "plainText": "<your client id>",
+  "awsRegion": "us-east-1",
+  "awsProfile": "bluefin"
+}

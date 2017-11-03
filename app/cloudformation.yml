@@ -3,6 +3,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'FunctionCI is an open source CI/CD Slack Bot for AWS Lambdas.'
 
 Parameters:
+  KMSStack:
+    Type: String
+    Description: KMS Stack Name
+    Default: 'functionci-kms'
   TLD:
     Type: String
     Description: TLD name needed by Route53 to perform DNS (example.com)
@@ -18,7 +22,19 @@ Parameters:
   Stage:
     Type: String
     Description: The deployment stage used by API Gateway
-    Default: 'api'
+    Default: 'prod'
+  SlackClientId:
+    Type: String
+    Description: Slack client id
+    NoEcho: true
+  SlackVerificationToken:
+    Type: String
+    Description: Slack verification token
+    NoEcho: true
+  SlackWebhookUrl:
+    Type: String
+    Description: Slack Webhook url where we post build notifications.
+    NoEcho: true
 
 Conditions:
   UseCustomDomain: !And
@@ -26,6 +42,64 @@ Conditions:
     - !Not [!Equals [!Ref Domain, '']]
 
 Resources:
+
+  #
+  # Role for CloudFormation
+  #
+  IamRoleCloudFormationExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: '/'
+
+  #
+  # Create a Policy and attach it to our CloudFormation Role.
+  #
+  IamPolicyCloudFormationExecution:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamPolicyCloudFormationExecution
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: '*'
+          Resource: '*'
+      Roles:
+      - Ref: IamRoleCloudFormationExecution
+
+  #
+  # DynamoDB Tables
+  #
+  FunctionCITable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: 'FunctionCI'
+      AttributeDefinitions:
+        -
+          AttributeName: 'hash_key'
+          AttributeType: 'S'
+        -
+          AttributeName: 'sort_key'
+          AttributeType: 'S'
+      KeySchema:
+        -
+          AttributeName: 'hash_key'
+          KeyType: 'HASH'
+        -
+          AttributeName: 'sort_key'
+          KeyType: 'RANGE'
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
 
   #
   # Role that our Lambda will assume to provide access to other AWS resources
@@ -72,6 +146,10 @@ Resources:
   #
   LambdaFunction:
     Type: AWS::Lambda::Function
+    DependsOn:
+      - IamRoleCloudFormationExecution
+      - IamPolicyCloudFormationExecution
+      - FunctionCITable
     Properties:
       Handler: index.handler
       Timeout: 5
@@ -95,6 +173,16 @@ Resources:
               callback(null, response);
           };
       Runtime: nodejs6.10
+      KmsKeyArn:
+        Fn::ImportValue:
+          !Sub "${KMSStack}-FunctionCiKmsKeyArn"
+      Environment:
+        Variables:
+          IamRoleCloudFormationExecution: !GetAtt IamRoleCloudFormationExecution.Arn
+          FunctionCITable: !GetAtt FunctionCITable.Arn
+          SlackClientId: !Ref SlackClientId
+          SlackVerificationToken: !Ref SlackVerificationToken
+          SlackWebhookUrl: !Ref SlackWebhookUrl
 
   #
   # Create the API Gateway
@@ -111,11 +199,18 @@ Resources:
       PathPart: !Ref Path #ex. example.com/api.
       RestApiId: !Ref RestApi
 
+  ApiGatewayResourceProxy:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref ApiGatewayResource
+      PathPart: '{proxy+}'
+      RestApiId: !Ref RestApi
+
   ApiGatewayMethodOptions:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
-      ResourceId: !Ref ApiGatewayResource
+      ResourceId: !Ref ApiGatewayResourceProxy
       RestApiId: !Ref RestApi
       HttpMethod: OPTIONS
       Integration:
@@ -142,10 +237,10 @@ Resources:
             method.response.header.Access-Control-Allow-Origin: false
             method.response.header.Access-Control-Allow-Credentials: true
 
-  ApiGatewayMethodPost:
+  ApiGatewayMethodAny:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: POST
+      HttpMethod: ANY
       RequestParameters: {}
       ResourceId: !Ref ApiGatewayResource
       RestApiId: !Ref RestApi
@@ -163,12 +258,12 @@ Resources:
               - '/invocations'
       MethodResponses: []
 
-  ApiGatewayMethodGet:
+  ApiGatewayMethodProxyAny:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: GET
+      HttpMethod: ANY
       RequestParameters: {}
-      ResourceId: !Ref ApiGatewayResource
+      ResourceId: !Ref ApiGatewayResourceProxy
       RestApiId: !Ref RestApi
       AuthorizationType: NONE
       Integration:
@@ -190,9 +285,9 @@ Resources:
       RestApiId: !Ref RestApi
       StageName: !Ref Stage # Maps to the custom domain name.  BasePathMapping.Stage
     DependsOn:
-      - ApiGatewayMethodPost
-      - ApiGatewayMethodGet
       - ApiGatewayMethodOptions
+      - ApiGatewayMethodAny
+      - ApiGatewayMethodProxyAny
 
   #
   # We need to give API Gateway permission to invoke our Lambda function.
@@ -267,14 +362,10 @@ Resources:
             HostedZoneId: 'Z2FDTNDATAQYW2' # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-hostedzoneid
             DNSName: !GetAtt ApiDomainName.DistributionDomainName
 
-  #
-  # Package Lambda
-  #
-
-  #
-  # DynamoDB
-  #
-
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'functionci-artifacts'
 
 Outputs:
   LambdaFunction:
@@ -282,6 +373,16 @@ Outputs:
     Value: !Ref LambdaFunction
     Export:
       Name: !Sub '${AWS::StackName}-LambdaFunction'
+  LambdaFunctionArn:
+    Description: Lambda Function Arn
+    Value: !GetAtt LambdaFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunctionArn'
+  ArtifactsBucket:
+    Description: Artifacts Bucket
+    Value: !Ref ArtifactsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-ArtifactsBucket'
   ApiGatewayUrl:
     Description: URL of your API endpoint
     Value: !Join
@@ -294,6 +395,32 @@ Outputs:
         - !Ref Stage
         - '/'
         - !Ref Path
+  SlackSlashCommandsUrl:
+    Description: Slack slash commands url
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !Ref RestApi
+        - '.execute-api.'
+        - !Ref AWS::Region
+        - '.amazonaws.com/'
+        - !Ref Stage
+        - '/'
+        - !Ref Path
+        - '/commands'
+  SlackInteractiveComponentsUrl:
+    Description: Slack interactive components url
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !Ref RestApi
+        - '.execute-api.'
+        - !Ref AWS::Region
+        - '.amazonaws.com/'
+        - !Ref Stage
+        - '/'
+        - !Ref Path
+        - '/interactive-components'
   CustomDomainUrl:
     Description: URL of your API endpoint
     Condition: UseCustomDomain
@@ -303,3 +430,23 @@ Outputs:
         - !Ref Domain
         - '/'
         - !Ref Path
+  CustomSlackSlashCommandsUrl:
+    Description: Slack slack commands url
+    Condition: UseCustomDomain
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !Ref Domain
+        - '/'
+        - !Ref Path
+        - '/commands'
+  CustomSlackInteractiveComponentsUrl:
+    Description: Slack interactive components url
+    Condition: UseCustomDomain
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !Ref Domain
+        - '/'
+        - !Ref Path
+        - '/interactive-components'

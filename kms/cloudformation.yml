@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'FunctionCI KMS Key'
+
+
+Parameters:
+  KeyAdmins:
+    Type: CommaDelimitedList
+    Description: Key Admins
+  KeyUsers:
+    Type: CommaDelimitedList
+    Description: Key Users
+
+#
+# CloudFormation resources
+#
+Resources:
+
+  FunctionCiKmsKey: 
+    Type: 'AWS::KMS::Key'
+    Properties: 
+      Description: 'FunctionCI Key'
+      KeyPolicy: 
+        Version: '2012-10-17'
+        Id: 'key-default-1'
+        Statement:
+          - 
+            Sid: 'Allow administration of the key'
+            Effect: 'Allow'
+            Principal:
+              AWS: !Ref KeyAdmins
+            Action: 
+              - 'kms:Create*'
+              - 'kms:Describe*'
+              - 'kms:Enable*'
+              - 'kms:List*'
+              - 'kms:Put*'
+              - 'kms:Update*'
+              - 'kms:Revoke*'
+              - 'kms:Disable*'
+              - 'kms:Get*'
+              - 'kms:Delete*'
+              - 'kms:ScheduleKeyDeletion'
+              - 'kms:CancelKeyDeletion'
+            Resource: '*'
+          - 
+            Sid: 'Allow use of the key'
+            Effect: 'Allow'
+            Principal: 
+              AWS: !Ref KeyUsers
+            Action: 
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+
+  FunctionCiKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: 'alias/functionci'
+      TargetKeyId:
+        Ref: FunctionCiKmsKey
+
+#
+# Outputs to be used by other CloudFormation templates if needed.
+#
+Outputs:
+  FunctionCiKmsKey:
+    Description: FunctionCiKmsKey
+    Value: !Ref FunctionCiKmsKey
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionCiKmsKey'
+  FunctionCiKmsKeyArn:
+    Description: FunctionCiKmsKeyArn
+    Value: !GetAtt FunctionCiKmsKey.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionCiKmsKeyArn'

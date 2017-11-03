@@ -1,9 +1,9 @@
 version: 0.1
 stack:
-  name: functionci
+  name: functionci-app
   template:
     file: cloudformation.yml
-    bucket: functionci-artifacts # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'
+    bucket: functionci-cf-artifacts # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'
   #
   # Reference parent stacks fo included shared information like stack name.
   #
@@ -22,7 +22,12 @@ stack:
     # # The domain you wish to use for this api.
     # Domain: 'api.fnci.io'
     # URI path
-    PATH: 'slack'
+    Path: 'slack'
+
+    # Slack params (encrypt)
+    SlackClientId: '${kms.decrypt(AQICAHhjNpxGxc7AX6NhOIEjyoXA3KHc2qhbn8lphYP7XmgoZAHOi1KCRYmIYxNmRxuTt3cDAAAAdjB0BgkqhkiG9w0BBwagZzBlAgEAMGAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMbfSXER70j/I6oTGoAgEQgDObZ+HsB7KwiyXmD8VjzS4Z2Uq9LWeomjxoE8wLPqLYqH4D2gPT4SYRfwe0nJPPG+X9teU=)}'
+    SlackVerificationToken: '${kms.decrypt(AQICAHhjNpxGxc7AX6NhOIEjyoXA3KHc2qhbn8lphYP7XmgoZAEi4XCUpuVY7qoTXVCvHprgAAAAdjB0BgkqhkiG9w0BBwagZzBlAgEAMGAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMdHQkTfSpDuEbSropAgEQgDNsNl5GUltJYMkw1cCbISrk/yPC+XJarBXxBUQoOXcPgX1wY/DAuJ91nh2CqMqXoNgg8fE=)}'
+    SlackWebhookUrl: '${kms.decrypt(AQICAHhjNpxGxc7AX6NhOIEjyoXA3KHc2qhbn8lphYP7XmgoZAFA7KNwJqEqxAc/zOBIrdLBAAAArzCBrAYJKoZIhvcNAQcGoIGeMIGbAgEAMIGVBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDO1sQ35V7fzLh7P/ZwIBEIBo8M5HCCsV69kDgOdk0+oNmXVFX/pIFeLFbJT67Fuc96O3N8vllzsFoVHKUrJbf6zTIUXTuYGdU4PTXrEgjvQ/We4hZNIWDf1vGx/ItERnw+Go7CPS/R52M8DnV5CELfKElgGBm8S1feg=)}'
 
 #
 # Define stack capabilities required.

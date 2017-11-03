@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'FunctionCI CodePipeline/CodeBuild for Lambda'
+
+Parameters:
+  FunctionCIStack:
+    Type: String
+    Description: FunctionCI Stack Name
+  GitHubOwner:
+    Type: String
+    Description: GitHub repository owner
+  GitHubRepo:
+    Type: String
+    Description: GitHub repository name
+  GitHubBranch:
+    Type: String
+    Description: GitHub repository branch
+  GitHubToken:
+    Type: String
+    Description: GitHub repository OAuth token
+  CodeBuildComputeType:
+    Type: String
+    Description: CodeBuildComputeType
+    Default: 'BUILD_GENERAL1_SMALL'
+  CodeBuildImage:
+    Type: String
+    Description: CodeBuildImage
+    Default: 'aws/codebuild/eb-nodejs-6.10.0-amazonlinux-64:4.0.0'
+  CodeBuildType:
+    Type: String
+    Description: CodeBuildType
+    Default: 'LINUX_CONTAINER'
+
+Resources:
+
+
+  #
+  # Code Build IAM Role
+  #
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      Policies:
+        - PolicyName: ServiceRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: CloudWatchWriteLogsPolicy
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Sid: S3GetObjectPolicy
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource: '*'
+              - Sid: S3PutObjectPolicy
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: '*'
+
+  #
+  # Code Pipeline IAM Role
+  #
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  #
+  # Code Build project
+  #
+  AppCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: !Ref CodeBuildComputeType
+        Image: !Ref CodeBuildImage
+        Type: !Ref CodeBuildType
+      Name:
+        Fn::Join:
+          - ''
+          - - Ref: AWS::StackName
+            - '-code-build'
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      TimeoutInMinutes: 5 # must be between 5 minutes and 8 hours
+
+
+  #
+  # Code Pipeline 'master'
+  #
+  AppCodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location:
+          Fn::ImportValue:
+            !Sub "${FunctionCIStack}-ArtifactsBucket"
+      RestartExecutionOnUpdate: true
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: Source
+          ActionTypeId:
+            Category: Source
+            Owner: ThirdParty
+            Version: 1
+            Provider: GitHub
+          Configuration:
+            Owner: !Ref GitHubOwner
+            Repo: !Ref GitHubRepo
+            Branch: !Ref GitHubBranch
+            OAuthToken: !Ref GitHubToken
+          OutputArtifacts:
+            - Name: SourceOutput
+          RunOrder: 1
+      - Name: Build
+        Actions:
+          - Name: BuildAndTest
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Provider: CodeBuild
+              Version: 1
+            Configuration:
+              ProjectName: !Ref AppCodeBuild
+            InputArtifacts:
+              - Name: SourceOutput
+            OutputArtifacts:
+              - Name: BuildOutput
+      - Name: Package
+        Actions:
+          - Name: Package
+            ActionTypeId:
+              Category: Invoke
+              Owner: AWS
+              Provider: Lambda
+              Version: 1
+            InputArtifacts:
+              - Name: BuildOutput
+              - Name: SourceOutput
+            Configuration:
+              FunctionName:
+                Fn::ImportValue:
+                  !Sub "${FunctionCIStack}-LambdaFunction"
+              UserParameters: 'master'
+
+  #
+  # CloudWatch Event to trigger lambda for build slack notifications.
+  #
+  BuildEventRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: 'BuildEventRule'
+      EventPattern:
+        source:
+          - 'aws.codebuild'
+        detail-type:
+          - 'CodeBuild Build State Change'
+        detail:
+          project-name:
+            - Fn::Join:
+              - ''
+              - - Ref: AWS::StackName
+                - '-code-build'
+          build-status:
+            - 'IN_PROGRESS'
+            - 'SUCCEEDED'
+            - 'FAILED'
+            - 'STOPPED'
+      State: 'ENABLED'
+      Targets:
+        -
+          Arn:
+            Fn::ImportValue:
+              !Sub "${FunctionCIStack}-LambdaFunctionArn"
+          Id: 'BuildRuleLambdaTarget'
+
+  #
+  # Permission for CloudWatch to invoke our Lambda
+  #
+  PermissionForBuildEventsToInvokeLambda:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName:
+        Fn::ImportValue:
+          !Sub "${FunctionCIStack}-LambdaFunction"
+      Action: 'lambda:InvokeFunction'
+      Principal: 'events.amazonaws.com'
+      SourceArn: !GetAtt BuildEventRule.Arn

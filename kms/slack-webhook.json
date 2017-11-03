@@ -1,0 +1,6 @@
+{
+  "keyId" : "<your kms key id>",
+  "plainText": "<your webhook url>",
+  "awsRegion": "us-east-1",
+  "awsProfile": "bluefin"
+}

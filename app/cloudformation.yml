@@ -23,21 +23,13 @@ Parameters:
     Type: String
     Description: The deployment stage used by API Gateway
     Default: 'prod'
-  SlackClientId:
-    Type: String
-    Description: Slack client id
-    NoEcho: true
   SlackVerificationToken:
     Type: String
     Description: Slack verification token
     NoEcho: true
-  SlackWebhookUrl:
+  SlackBotOAuthToken:
     Type: String
-    Description: Slack Webhook url where we post build notifications.
-    NoEcho: true
-  SlackOAuthToken:
-    Type: String
-    Description: Slack OAuth Token
+    Description: Slack Bot OAuth Token
     NoEcho: true
   GithubToken:
     Type: String
@@ -280,10 +272,8 @@ Resources:
           IamRoleCloudFormationExecution: !GetAtt IamRoleCloudFormationExecution.Arn
           FunctionCITable: !GetAtt FunctionCITable.Arn
           SNSTopic: !Ref SNSTopic
-          SlackClientId: !Ref SlackClientId
           SlackVerificationToken: !Ref SlackVerificationToken
-          SlackWebhookUrl: !Ref SlackWebhookUrl
-          SlackOAuthToken: !Ref SlackOAuthToken
+          SlackBotOAuthToken: !Ref SlackBotOAuthToken
           GithubToken: !Ref GithubToken
           ArtifactsBucket: !Ref ArtifactsBucket
 

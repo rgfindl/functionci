@@ -44,10 +44,14 @@ functions.handle_create_project_dialog = function(payload, callback) {
             console.log(err);
             return callback(null, {
                 statusCode: 200,
-                body: {
-                    ok: false,
-                    error: err
-                }
+                body: JSON.stringify({
+                    "errors": [
+                        {
+                            "name": "github_repo",
+                            "error": err
+                        }
+                    ]
+                })
             });
         } else {
             return callback(null, {

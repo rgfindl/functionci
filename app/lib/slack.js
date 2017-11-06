@@ -6,16 +6,17 @@ const async = require('async');
 var functions = {};
 
 functions.channels_list = function(params, done) {
+    console.log('channels_list');
     var url = 'https://slack.com/api/channels.list';
     var options = {
         url: url,
         headers: {
-            'Authorization':'Bearer '+process.env.SlackOAuthToken
+            'Authorization':'Bearer '+process.env.SlackBotOAuthToken
         },
         json: true,
-        method: 'GET',
+        method: 'POST',
         body: {
-            limit: 200
+            limit: params.limit
         }
     };
     if (params.cursor) {
@@ -27,11 +28,12 @@ functions.channels_list = function(params, done) {
 };
 
 functions.groups_list = function(params, done) {
+    console.log('groups_list');
     var url = 'https://slack.com/api/groups.list';
     var options = {
         url: url,
         headers: {
-            'Authorization':'Bearer '+process.env.SlackOAuthToken
+            'Authorization':'Bearer '+process.env.SlackBotOAuthToken
         },
         json: true,
         method: 'GET'
@@ -42,11 +44,14 @@ functions.groups_list = function(params, done) {
 };
 
 functions.fetch_all_channels = function(params, done) {
+    console.log('fetch_all_channels');
     async.waterfall([
         async.constant([]),
         function(channels, next_waterfall) {
             var complete = false;
-            var params = {};
+            var params = {
+                limit: 200
+            };
             async.until(function() {
                 return complete;
             }, function(next) {
@@ -54,7 +59,8 @@ functions.fetch_all_channels = function(params, done) {
                     if (err) return next(err);
                     if (!results.ok) return next(results.error);
 
-                    if (results.response_metadata && results.response_metadata.next_cursor) {
+                    if ((results.response_metadata && results.response_metadata.next_cursor)
+                        && _.size(results.channels) == params.limit) {
                         params.cursor = results.response_metadata.next_cursor;
                     } else {
                         complete = true;
@@ -87,9 +93,7 @@ functions.fetch_all_channels = function(params, done) {
                 next(null, channels);
             });
         }
-    ], function(err, channels) {
-        done(err, channels);
-    });
+    ], done);
 };
 
 functions.post_message = function(params, done) {
@@ -98,7 +102,7 @@ functions.post_message = function(params, done) {
     var options = {
         url: url,
         headers: {
-            'Authorization':'Bearer '+process.env.SlackOAuthToken
+            'Authorization':'Bearer '+process.env.SlackBotOAuthToken
         },
         json: true,
         method: 'POST',
@@ -115,6 +119,7 @@ functions.post_message = function(params, done) {
 };
 
 functions.create_dialog = function(trigger_id, done) {
+    console.log('slack.create_dialog');
     async.waterfall([
         async.constant({trigger_id: trigger_id}),
         function(params, next) {
@@ -136,7 +141,7 @@ functions.create_dialog = function(trigger_id, done) {
             var options = {
                 url: url,
                 headers: {
-                    'Authorization':'Bearer '+process.env.SlackOAuthToken
+                    'Authorization':'Bearer '+process.env.SlackBotOAuthToken
                 },
                 json:true,
                 method: 'POST',

@@ -14,7 +14,7 @@ const handle_codebuild = require('./lib/handle_codebuild');
 exports.handler = function(event, context, callback) {
     console.log(JSON.stringify(event, null, 3));
     if (!_.isNil(event.source) && _.isEqual(event.source, 'aws.codebuild')) {
-        handle_codebuild.handle(event.Records[0], callback);
+        handle_codebuild.handle(event, callback);
         return;
     } else if (!_.isNil(event.Records) && _.isEqual(event.Records[0].EventSource, 'aws:sns')) {
         handle_sns.handle(event.Records[0], callback);
@@ -30,5 +30,10 @@ exports.handler = function(event, context, callback) {
     } else if (_.isEqual(event.path, '/slack/interactive-components')) {
         handle_slack_interactive_components.handle(body, callback);
         return;
+    } else {
+        return callback(null, {
+            statusCode: 200,
+            body: 'Unknown command'
+        });
     }
 };

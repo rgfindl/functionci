@@ -8,7 +8,7 @@ var functions = {};
 functions.handle = function(event, callback) {
     console.log('handle_codebuild');
     slack.post_message({
-        channel: 'G6QD7UBRD',
+        channel: 'G7V37B2P3',
         text: 'CodeBuild message'
     }, callback);
 };

@@ -8,10 +8,18 @@ Create a KMS Key to use when encrypting your secret Slack credentials.
 
 ## Encrypt Secrets
 - Install https://github.com/ddffx/kms-cli and setup your AWS environment vars
-- Update the json files within this folder
-- Encrypt using these commands: 
-  - `kms-cli encrypt --file slack-client-id.json`
-  - `kms-cli encrypt --file slack-verification-token.json`
-  - `kms-cli encrypt --file slack-webhook.json`
-  - `kms-cli encrypt --file slack-github-token.json`
+- Encrypt each string as outlined below
 - Add the encrypted strings to the `app/_cim.yml`.  The format is `${kms.decrypt(<encreted string>)}`
+
+
+### How to Encrypt
+Create a file called `encrypt.json`
+```
+{
+  "keyId" : "<your kms key id>",
+  "plainText": "<your client id>",
+  "awsRegion": "<aws region>",
+  "awsProfile": "<aws profile"
+}
+```
+Use this command to perform the encryption : `kms-cli encrypt --file encrypt.json`

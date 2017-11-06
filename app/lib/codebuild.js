@@ -5,6 +5,7 @@ const _ = require('lodash');
 var functions = {};
 
 functions.listCuratedEnvironmentImages = function(done) {
+    console.log('listCuratedEnvironmentImages');
     var params = {
     };
     codebuild.listCuratedEnvironmentImages(params, function(err, data) {

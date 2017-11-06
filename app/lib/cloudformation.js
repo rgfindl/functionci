@@ -24,7 +24,8 @@ functions.uploadCFTemplate = function(done) {
         };
         s3.putObject(params, function(err, result) {
             if (err) {
-                throw err;
+                console.log(err);
+                return done(err.message);
             }
             done(err, 'https://s3.amazonaws.com/'+process.env.ArtifactsBucket+'/_cloudformation.yml');
         });
@@ -86,7 +87,13 @@ functions.createStack = function(params, done) {
         TemplateURL: params.templateS3Url
     };
     console.log(JSON.stringify(input, null, 3));
-    cloudformation.createStack(input, done);
+    cloudformation.createStack(input, function(err, response) {
+        if (err) {
+            console.log(err);
+            return done(err.message);
+        }
+        done();
+    });
 };
 
 functions.build_stack_up = function(params, done) {

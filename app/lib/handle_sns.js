@@ -8,30 +8,32 @@ var functions = {};
 functions.handle = function(event, callback) {
     console.log('handle_sns');
     var message_items = _.split(event.Sns.Message, '\n');
-    var message = [];
+    var message = {};
     _.forEach(message_items, function(item) {
         const item_parts = _.split(item, '=');
-        var obj = {};
         if (!_.isEmpty(item_parts[0])) {
-            obj[item_parts[0]] = _.replace(item_parts[1], /'/g, '');
-            message.push(obj);
+            message[item_parts[0]] = _.replace(item_parts[1], /'/g, '');
         }
     });
-    console.log(JSON.stringify(message, null, 3));
-    if (_.startsWith(message.ResourceStatus, 'DELETE_COMPLETE')) {
+    console.log(message);
+    if (_.isEqual(message.ResourceStatus, 'CREATE_FAILED') &&
+        _.isEqual(message.ResourceType, 'AWS::CloudFormation::Stack')) {
         // Tell user it didn't work.
         slack.post_message({
-            channel: 'G6QD7UBRD',
+            channel: 'C5GGB6Z3L',
             text: 'Project setup failed'
         }, callback);
-    } else if (_.startsWith(message.ResourceStatus, 'CREATE_COMPLETE') &&
+    } else if (_.isEqual(message.ResourceStatus, 'CREATE_COMPLETE') &&
         _.isEqual(message.ResourceType, 'AWS::CloudFormation::Stack')) {
         // Add to DB.
         // Tell user it worked.
+        console.log('here');
         slack.post_message({
-            channel: 'G6QD7UBRD',
+            channel: 'G7V37B2P3',
             text: 'Project setup complete'
         }, callback);
+    } else {
+        callback();
     }
 };
 module.exports = functions;

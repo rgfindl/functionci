@@ -9,6 +9,7 @@ const VALID_COMMANDS = ['create project', 'deploy fn', 'show fn', 'add fn'];
 var functions = {};
 
 functions.create_project = function(params, callback) {
+    console.log('handle_slack_commands.create_project');
     if (_.isEqual(_.toLower(_.head(params.options)), 'help')) {
         return callback(null, {
             statusCode: 200,
@@ -39,7 +40,7 @@ functions.create_project = function(params, callback) {
 };
 
 functions.handle = function(body, callback) {
-
+    console.log('handle_slack_commands.handle');
     // Is the token valid?
     if (!_.isEqual(body.token, process.env.SlackVerificationToken)) {
         return callback(null, {

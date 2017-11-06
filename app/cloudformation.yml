@@ -35,6 +35,14 @@ Parameters:
     Type: String
     Description: Slack Webhook url where we post build notifications.
     NoEcho: true
+  SlackOAuthToken:
+    Type: String
+    Description: Slack OAuth Token
+    NoEcho: true
+  GithubToken:
+    Type: String
+    Description: Github Token
+    NoEcho: true
 
 Conditions:
   UseCustomDomain: !And
@@ -71,7 +79,48 @@ Resources:
         Version: '2012-10-17'
         Statement:
         - Effect: Allow
-          Action: '*'
+          Action:
+            - cloudformation:CreateStack
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStackResources
+            - cloudformation:GetTemplate
+            - cloudformation:ValidateTemplate
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - iam:Create*
+            - iam:List*
+            - iam:Put*
+            - iam:Get*
+            - iam:Attach*
+            - iam:Detach*
+            - iam:Delete*
+            - iam:Pass*
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - logs:*
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - codepipeline:*
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - codebuild:*
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - events:*
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - lambda:*
           Resource: '*'
       Roles:
       - Ref: IamRoleCloudFormationExecution
@@ -100,6 +149,11 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: '5'
         WriteCapacityUnits: '5'
+
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'functionci-artifacts'
 
   #
   # Role that our Lambda will assume to provide access to other AWS resources
@@ -132,12 +186,55 @@ Resources:
           Action:
             - logs:CreateLogGroup
             - logs:CreateLogStream
-          Resource: arn:aws:logs:us-east-1:*:*
+            - logs:PutLogEvents
+          Resource: '*'
         - Effect: Allow
           Action:
-            - logs:PutLogEvents
-          Resource: arn:aws:logs:us-east-1:*:*
+            - codebuild:ListCuratedEnvironmentImages
           Resource: '*'
+        - Effect: Allow
+          Action:
+            - iam:GetRole
+            - iam:PassRole
+          Resource: !GetAtt IamRoleCloudFormationExecution.Arn
+        - Effect: Allow
+          Action:
+            - lambda:UpdateFunctionCode
+            - lambda:UpdateAlias
+            - lambda:ListAliases
+            - lambda:ListVersionsByFunction
+            - lambda:DeleteFunction
+            - lambda:PublishVersion
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource: !GetAtt FunctionCITable.Arn
+        - Effect: Allow
+          Action:
+            - cloudformation:CreateStack
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStackResources
+            - cloudformation:GetTemplate
+            - cloudformation:ValidateTemplate
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:ListBucket
+            - s3:PutObject
+          Resource:
+            - Fn::Join:
+                - ''
+                - - 'arn:aws:s3:::'
+                  - Ref: ArtifactsBucket
+            - Fn::Join:
+                - ''
+                - - 'arn:aws:s3:::'
+                  - Ref: ArtifactsBucket
+                  - '/*'
       Roles:
       - Ref: IamRoleLambdaExecution
 
@@ -150,6 +247,8 @@ Resources:
       - IamRoleCloudFormationExecution
       - IamPolicyCloudFormationExecution
       - FunctionCITable
+      - SNSTopic
+      - ArtifactsBucket
     Properties:
       Handler: index.handler
       Timeout: 5
@@ -180,9 +279,13 @@ Resources:
         Variables:
           IamRoleCloudFormationExecution: !GetAtt IamRoleCloudFormationExecution.Arn
           FunctionCITable: !GetAtt FunctionCITable.Arn
+          SNSTopic: !Ref SNSTopic
           SlackClientId: !Ref SlackClientId
           SlackVerificationToken: !Ref SlackVerificationToken
           SlackWebhookUrl: !Ref SlackWebhookUrl
+          SlackOAuthToken: !Ref SlackOAuthToken
+          GithubToken: !Ref GithubToken
+          ArtifactsBucket: !Ref ArtifactsBucket
 
   #
   # Create the API Gateway
@@ -362,10 +465,45 @@ Resources:
             HostedZoneId: 'Z2FDTNDATAQYW2' # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-hostedzoneid
             DNSName: !GetAtt ApiDomainName.DistributionDomainName
 
-  ArtifactsBucket:
-    Type: AWS::S3::Bucket
+
+  #
+  # SNS Topic
+  #
+  SNSTopic:
+    Type: AWS::SNS::Topic
     Properties:
-      BucketName: 'functionci-artifacts'
+      DisplayName:
+        Fn::Join:
+          - ''
+          - - Ref: AWS::StackName
+            - ' Topic'
+      TopicName:
+        Fn::Join:
+          - ''
+          - - Ref: AWS::StackName
+            - '-topic'
+
+  #
+  # Subscribe our new Lambda function to the SNS topic.
+  #
+  LambdaSNSSubscription:
+    Type: AWS::SNS::Subscription
+    DependsOn: LambdaFunction
+    Properties:
+      TopicArn: !Ref SNSTopic
+      Protocol: lambda
+      Endpoint: !GetAtt LambdaFunction.Arn
+
+  #
+  # Give SNS permission to invoke our Lambda
+  #
+  PermissionForSNSToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaFunction
+      Action: 'lambda:InvokeFunction'
+      Principal: 'sns.amazonaws.com'
+      SourceArn: !Ref SNSTopic
 
 Outputs:
   LambdaFunction:

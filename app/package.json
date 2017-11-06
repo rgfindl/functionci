@@ -7,6 +7,9 @@
     "test": "mocha"
   },
   "dependencies": {
+    "async": "^2.5.0",
+    "lodash": "^4.17.4",
+    "request": "^2.83.0",
     "winston": "^2.3.1"
   },
   "devDependencies": {

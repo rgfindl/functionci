@@ -200,6 +200,10 @@ Resources:
           Resource: '*'
         - Effect: Allow
           Action:
+            - codepipeline:*
+          Resource: '*'
+        - Effect: Allow
+          Action:
             - dynamodb:*
           Resource: !GetAtt FunctionCITable.Arn
         - Effect: Allow
@@ -210,6 +214,7 @@ Resources:
             - cloudformation:DescribeStackResources
             - cloudformation:GetTemplate
             - cloudformation:ValidateTemplate
+            - cloudformation:DeleteStack
           Resource: '*'
         - Effect: Allow
           Action:
@@ -270,7 +275,7 @@ Resources:
       Environment:
         Variables:
           IamRoleCloudFormationExecution: !GetAtt IamRoleCloudFormationExecution.Arn
-          FunctionCITable: !GetAtt FunctionCITable.Arn
+          FunctionCITable: !Ref FunctionCITable
           SNSTopic: !Ref SNSTopic
           SlackVerificationToken: !Ref SlackVerificationToken
           SlackBotOAuthToken: !Ref SlackBotOAuthToken

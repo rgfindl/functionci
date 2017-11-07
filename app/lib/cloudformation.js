@@ -96,6 +96,22 @@ functions.createStack = function(params, done) {
     });
 };
 
+functions.delete_stack = function(params, done) {
+    console.log('Delete stack');
+    var input = {
+        StackName: 'functionci-' + params.project_id,
+        RoleARN: process.env.IamRoleCloudFormationExecution
+    };
+    console.log(JSON.stringify(input, null, 3));
+    cloudformation.deleteStack(input, function(err, response) {
+        if (err) {
+            console.log(err);
+            return done(err.message);
+        }
+        done();
+    });
+};
+
 functions.build_stack_up = function(params, done) {
     async.waterfall([
         functions.uploadCFTemplate,

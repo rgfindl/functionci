@@ -174,7 +174,8 @@ Resources:
               FunctionName:
                 Fn::ImportValue:
                   !Sub "${FunctionCIStack}-LambdaFunction"
-              UserParameters: 'master'
+              UserParameters:
+                Ref: AWS::StackName
 
   #
   # CloudWatch Event to trigger lambda for build slack notifications.

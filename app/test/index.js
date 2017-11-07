@@ -7,22 +7,22 @@ process.env.SlackBotOAuthToken = 'xoxb-xxxxxx';
 
 
 describe('index', function() {
-    // it('create project', function (done) {
-    //     var req = {
-    //         path: '/slack/commands',
-    //         "body": "token=1234&team_id=T1Y5SBYKV&team_domain=medisprout&channel_id=D1Y75LXV4&channel_name=directmessage&user_id=U1Y73S952&user_name=randyfindley&command=%2Ffn&text=create+project&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FT1Y5SBYKV%2F268633988183%2Fs2PDnET9JYjecdiqvtvfCGhv&trigger_id=267034568481.66196406675.ec9261de442dedb68a1d3647859f85fa"
-    //     };
-    //     index.handler(req, {}, function(err, response) {
-    //         //assert.equal(response.statusCode, 200);
-    //         // assert.ok(response.body);
-    //         // console.log(response.body);
-    //         // var body = JSON.parse(response.body);
-    //         // assert.ok(body.event);
-    //         // assert.ok(body.event.test);
-    //         console.log(JSON.stringify(response, null, 3));
-    //         done(err);
-    //     });
-    // });
+    it('create project', function (done) {
+        var req = {
+            path: '/slack/commands',
+            "body": "token=1234&team_id=T1Y5SBYKV&team_domain=medisprout&channel_id=D1Y75LXV4&channel_name=directmessage&user_id=U1Y73S952&user_name=randyfindley&command=%2Ffn&text=deploy+fn+demo+functionci-demo-master+5&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FT1Y5SBYKV%2F268633988183%2Fs2PDnET9JYjecdiqvtvfCGhv&trigger_id=267034568481.66196406675.ec9261de442dedb68a1d3647859f85fa"
+        };
+        index.handler(req, {}, function(err, response) {
+            //assert.equal(response.statusCode, 200);
+            // assert.ok(response.body);
+            // console.log(response.body);
+            // var body = JSON.parse(response.body);
+            // assert.ok(body.event);
+            // assert.ok(body.event.test);
+            console.log(JSON.stringify(response, null, 3));
+            done(err);
+        });
+    });
 //     it('dialog', function(done) {
 //        var req = {
 //            path: '/slack/interactive-components',
@@ -60,54 +60,54 @@ describe('index', function() {
 //             console.log(response);
 //             done(err);
 //         });
-//     });
-    it('codebuild', function(done) {
-       var req = {
-           "version": "0",
-           "id": "fc545584-970e-991a-1113-46467a09cd04",
-           "detail-type": "CodeBuild Build State Change",
-           "source": "aws.codebuild",
-           "account": "132093761664",
-           "time": "2017-11-05T22:01:11Z",
-           "region": "us-east-1",
-           "resources": [
-               "arn:aws:codebuild:us-east-1:132093761664:build/functionci-thestackshack-serverless-demo-master-code-build:93942698-859e-4fa9-8fde-c062977f6053"
-           ],
-           "detail": {
-               "build-status": "IN_PROGRESS",
-               "project-name": "functionci-thestackshack-serverless-demo-master-code-build",
-               "build-id": "arn:aws:codebuild:us-east-1:132093761664:build/functionci-thestackshack-serverless-demo-master-code-build:93942698-859e-4fa9-8fde-c062977f6053",
-               "additional-information": {
-                   "artifact": {
-                       "location": "arn:aws:s3:::functionci-artifacts/functionci-thestacks/BuildOutpu/lrm1vN7"
-                   },
-                   "environment": {
-                       "image": "aws/codebuild/eb-nodejs-6.10.0-amazonlinux-64:4.0.0",
-                       "privileged-mode": false,
-                       "compute-type": "BUILD_GENERAL1_SMALL",
-                       "type": "LINUX_CONTAINER",
-                       "environment-variables": []
-                   },
-                   "timeout-in-minutes": 5,
-                   "build-complete": false,
-                   "initiator": "codepipeline/functionci-thestackshack-serverless-demo-master-AppCodePipeline-12OOMAI0OA7MG",
-                   "build-start-time": "Nov 5, 2017 10:01:11 PM",
-                   "source": {
-                       "buildspec": "buildspec.yml",
-                       "type": "CODEPIPELINE"
-                   },
-                   "source-version": "arn:aws:s3:::functionci-artifacts/functionci-thestacks/SourceOutp/PHoeKv7.zip"
-               },
-               "current-phase": "SUBMITTED",
-               "current-phase-context": "[]",
-               "version": "1"
-           }
-        };
-        index.handler(req, {}, function(err, response) {
-            console.log(response);
-            done(err);
-        });
-     });
+// //     });
+//     it('codebuild', function(done) {
+//        var req = {
+//            "version": "0",
+//            "id": "fc545584-970e-991a-1113-46467a09cd04",
+//            "detail-type": "CodeBuild Build State Change",
+//            "source": "aws.codebuild",
+//            "account": "132093761664",
+//            "time": "2017-11-05T22:01:11Z",
+//            "region": "us-east-1",
+//            "resources": [
+//                "arn:aws:codebuild:us-east-1:132093761664:build/functionci-thestackshack-serverless-demo-master-code-build:93942698-859e-4fa9-8fde-c062977f6053"
+//            ],
+//            "detail": {
+//                "build-status": "IN_PROGRESS",
+//                "project-name": "functionci-thestackshack-serverless-demo-master-code-build",
+//                "build-id": "arn:aws:codebuild:us-east-1:132093761664:build/functionci-thestackshack-serverless-demo-master-code-build:93942698-859e-4fa9-8fde-c062977f6053",
+//                "additional-information": {
+//                    "artifact": {
+//                        "location": "arn:aws:s3:::functionci-artifacts/functionci-thestacks/BuildOutpu/lrm1vN7"
+//                    },
+//                    "environment": {
+//                        "image": "aws/codebuild/eb-nodejs-6.10.0-amazonlinux-64:4.0.0",
+//                        "privileged-mode": false,
+//                        "compute-type": "BUILD_GENERAL1_SMALL",
+//                        "type": "LINUX_CONTAINER",
+//                        "environment-variables": []
+//                    },
+//                    "timeout-in-minutes": 5,
+//                    "build-complete": false,
+//                    "initiator": "codepipeline/functionci-thestackshack-serverless-demo-master-AppCodePipeline-12OOMAI0OA7MG",
+//                    "build-start-time": "Nov 5, 2017 10:01:11 PM",
+//                    "source": {
+//                        "buildspec": "buildspec.yml",
+//                        "type": "CODEPIPELINE"
+//                    },
+//                    "source-version": "arn:aws:s3:::functionci-artifacts/functionci-thestacks/SourceOutp/PHoeKv7.zip"
+//                },
+//                "current-phase": "SUBMITTED",
+//                "current-phase-context": "[]",
+//                "version": "1"
+//            }
+//         };
+//         index.handler(req, {}, function(err, response) {
+//             console.log(response);
+//             done(err);
+//         });
+//      });
 //        var req_failed = {
 //            "version": "0",
 //            "id": "e0e9c40b-5720-143c-4667-fb67ef65a366",
@@ -194,5 +194,67 @@ describe('index', function() {
 //                "version": "1"
 //            }
 //        };
+//     });
+//     it('codepipeline', function(done) {
+//
+//         var cp = {
+//             "CodePipeline.job": {
+//                 "id": "eddd25bc-ef53-4440-bee5-f69d804a5e9b",
+//                 "accountId": "132093761664",
+//                 "data": {
+//                     "actionConfiguration": {
+//                         "configuration": {
+//                             "FunctionName": "functionci-app-LambdaFunction-19QAJIOQZW45M",
+//                             "UserParameters": "functionci-functionci-demo-master"
+//                         }
+//                     },
+//                     "inputArtifacts": [
+//                         {
+//                             "location": {
+//                                 "s3Location": {
+//                                     "bucketName": "functionci-artifacts",
+//                                     "objectKey": "functionci-functionc/SourceOutp/8ws4keK.zip"
+//                                 },
+//                                 "type": "S3"
+//                             },
+//                             "revision": "e3642fdfabc5088e834519daa0222af4cb1c90e9",
+//                             "name": "SourceOutput"
+//                         },
+//                         {
+//                             "location": {
+//                                 "s3Location": {
+//                                     "bucketName": "functionci-artifacts",
+//                                     "objectKey": "functionci-functionc/BuildOutpu/0iqXcIU"
+//                                 },
+//                                 "type": "S3"
+//                             },
+//                             "revision": null,
+//                             "name": "BuildOutput"
+//                         }
+//                     ],
+//                     "outputArtifacts": [],
+//                     "artifactCredentials": {
+//                         "secretAccessKey": "hPgQPlLqhfFaw44f82BZVocR7gSWrlyL5IMTIqNB",
+//                         "sessionToken": "AgoGb3JpZ2luEFgaCXVzLWVhc3QtMSKAAhPEloBGV9Vu0jNLSJtSX+ZQzkS2MyAKv/VRjnuicMjRA05jyL5fTkVzjpz559z/n9464gGPnCqwm1hk34iv3dMsPDfuODzAHx10VzK1rSa2vwnGY7X2ySUrWQaIma4zH1YcgPkxkFfIveRUF3Oq8sp3arcVNFBT79HBR9UuzCHWIeIxq2hLn0G9Rq91bOkSgiwj3aJxAUfzOTgwAL788a+FzMObaMMxIL2p24XawsPU98jmrkGUfkSq0K/X7IZXrwI5t3O2KzIkx5+EjSQjfcevc3/9v9j2WaUqA6N9CpUqVrEMMzD70Qat3c5x6oyrpUvZmjfkbheWBSmdtHkt/owqpwUIjf//////////ARABGgwxMzIwOTM3NjE2NjQiDE/rhG51EaVG/liMCyr7BF82XXaiWQZyEhn7zMAOfgPQ6Wa1Vd0eWfElGRJgngL31Hev55FdAfA95xA2k8XsJSfC1LX+b7rYW0huqw/nZw/KOfrNYGsGkmk76lEJotYefhzsQ9Xfq5NZT2LI7htTrMn0REuS1/cbbkDeY6O++MlbUmeib2ha8XkFX/wMlYUgFdCL3WlCj01aV3THSRqMVaAQMCljrfIj2hMnCPXbRqpUQaDSaUmIIdOoMQEhSnpe7/VWeqL6KFAiNmmx+ZLjj/YWTiqSaYpIPB23RvwVgjKPATxhrgSJJdGLTatDItohOeqkfUovEAmJzrVAgP6Ksev8keDoceqkTetBGqAqE37KYw45CPQRP3+oM7AENsxQwcBJpGVgsBnLTlnoiVp9jQ2WXwoU/wLjolVY9/vJwrvKhN+0NVuQmqI0s5GbNmGbyhw+Wv1P+/tosUHm+w9JNplyVZIc7nbYoN+p1utgrmaedbexBiIbmM3XC3ffpFpgYY3v/c/lNTOgYGDzDGxG7GBvXhOiIxuPggoQBt8O4cSOHsmAyeqFGFP3u0oOr3qqt4v0/YWUr8VuJg9Q2r2KQgzVFG2NierDQMwrh2Hue2lcvx5qtjZKj4pNEO/ze3lKEiC4o3XIT4vrRw7L37k61eKgbQ9DFGaeDT9yUtu+EPYhQOShAhZBnkZfSavNbAtO/sYfhJyxK+fVxxBxxd/xe2K5XpLbaobiy2z2EZL/munoedOThNaUAO/8gP5CGPWZJLv+oSEjeAg93gGmpVq8ZfjE9NCpC8ZnFncT94EUJDrvAKVAHAR4+dDbZ5FDpWilZLw7HG25Fp5lu7Rnc29zmW9FQO00EhdGoqhDMKHDhtAF",
+//                         "accessKeyId": "ASIAIWTXGKXK6IE7D7LQ"
+//                     }
+//                 }
+//             }
+//         };
+//         index.handler(cp, {
+//             succeed: function(err, response) {
+//                 console.log('succeed');
+//                 console.log(response);
+//                 done(err);
+//             },
+//             fail: function(err, response) {
+//                 console.log('fail');
+//                 console.log(response);
+//                 done(err);
+//             }
+//         }, function(err, response) {
+//             console.log(response);
+//             done(err);
+//         });
 //     });
 });

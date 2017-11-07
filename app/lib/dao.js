@@ -1,8 +1,6 @@
 const AWS = require('aws-sdk');
 const _ = require('lodash');
 const async = require('async');
-    // var credentials = new AWS.SharedIniFileCredentials({profile: 'bluefin'});
-    // AWS.config.credentials = credentials;
 var docClient = new AWS.DynamoDB.DocumentClient();
 
 var functions = {};
@@ -218,13 +216,15 @@ functions.get_builds_per_project = function(input, done) {
     console.log('dao.get_builds_per_project');
     var params = {
         TableName: process.env.FunctionCITable,
+        ScanIndexForward: false,
         KeyConditionExpression: "#hash_key = :hash_key",
         ExpressionAttributeNames:{
             "#hash_key": "hash_key"
         },
         ExpressionAttributeValues: {
             ":hash_key": input.project_id
-        }
+        },
+        Limit: input.limit | 3
     };
     if (!_.isNil(input.from)) {
         params.ExclusiveStartKey = {
@@ -236,8 +236,55 @@ functions.get_builds_per_project = function(input, done) {
     docClient.query(params, done);
 };
 
+functions.delete_builds = function(builds, done) {
+
+    var params = {
+        RequestItems: {}
+    };
+    params.RequestItems[process.env.FunctionCITable] = [];
+    _.forEach(builds, function(build) {
+        params.RequestItems[process.env.FunctionCITable].push({
+            DeleteRequest: {
+                Key: {
+                    hash_key: build.project_id,
+                    sort_key: build.version
+                }
+            }
+        });
+    });
+    docClient.batchWrite(params, done);
+};
+
 functions.delete_builds_per_project = function(input, done) {
-    done(null, {});
+    async.waterfall([
+        async.constant([]),
+        function(builds, next_waterfall) {
+            var complete = false;
+            var params = {
+                project_id: input.project_id,
+                limit: 25
+            };
+            async.until(function() {
+                return complete;
+            }, function(next) {
+                functions.get_builds_per_project(params, function(err, data) {
+                    if (err) return next(err);
+                    builds = _.union(builds, data.Items);
+                    if (data.LastEvaluatedKey) {
+                        params.from = data.LastEvaluatedKey;
+                    } else {
+                        complete = true;
+                    }
+                    next();
+                });
+            }, function(err) {
+                next_waterfall(err, builds);
+            });
+        },
+        function(builds, next_waterfall) {
+            functions.delete_builds(builds, next_waterfall);
+        }
+    ], done);
 };
 
 functions.put_deployment = function(input, done) {
@@ -256,13 +303,15 @@ functions.get_deployments_per_fn = function(input, done) {
     console.log('dao.get_projects');
     var params = {
         TableName: process.env.FunctionCITable,
+        ScanIndexForward: false,
         KeyConditionExpression: "#hash_key = :hash_key",
         ExpressionAttributeNames:{
             "#hash_key": "hash_key"
         },
         ExpressionAttributeValues: {
             ":hash_key": input.short_name
-        }
+        },
+        Limit: input.limit | 3
     };
     if (!_.isNil(input.from)) {
         params.ExclusiveStartKey = {
@@ -274,8 +323,55 @@ functions.get_deployments_per_fn = function(input, done) {
     docClient.query(params, done);
 };
 
+functions.delete_deployments = function(deployments, done) {
+
+    var params = {
+        RequestItems: {}
+    };
+    params.RequestItems[process.env.FunctionCITable] = [];
+    _.forEach(deployments, function(deployment) {
+        params.RequestItems[process.env.FunctionCITable].push({
+            DeleteRequest: {
+                Key: {
+                    hash_key: deployment.fn_short_name,
+                    sort_key: deployment.deployment_date
+                }
+            }
+        });
+    });
+    docClient.batchWrite(params, done);
+};
+
 functions.delete_deployments_per_fn = function(input, done) {
-    done(null, {});
+    async.waterfall([
+        async.constant([]),
+        function(deployments, next_waterfall) {
+            var complete = false;
+            var params = {
+                short_name: input.short_name,
+                limit: 25
+            };
+            async.until(function() {
+                return complete;
+            }, function(next) {
+                functions.get_deployments_per_fn(params, function(err, data) {
+                    if (err) return next(err);
+                    deployments = _.union(deployments, data.Items);
+                    if (data.LastEvaluatedKey) {
+                        params.from = data.LastEvaluatedKey;
+                    } else {
+                        complete = true;
+                    }
+                    next();
+                });
+            }, function(err) {
+                next_waterfall(err, deployments);
+            });
+        },
+        function(deployments, next_waterfall) {
+            functions.delete_deployments(deployments, next_waterfall);
+        }
+    ], done);
 };
 
 module.exports = functions;

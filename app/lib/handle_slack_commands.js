@@ -125,28 +125,47 @@ functions.show_fn = function(params, callback) {
                 }
             });
         } else {
-            var text = '';
-            var div = '';
+
+            // Notify slack
+            var message = {
+                response_type: "in_channel",
+                pretext: 'Deployment History',
+                attachments: []
+            };
+
             _.forEach(data.Items, function(item) {
-                text += div;
-                text += 'project: '+item.project_id + '\n';
-                text += 'version ' + item.build_version + '\n';
-                text += 'date ' + item.deployment_date + '\n';
-                text += 'by ' + item.user_name + '\n';
-                div = '\n';
+                var d = new Date(item.deployment_date);
+                var seconds = d.getTime() / 1000;
+                message.attachments.push(
+                    {
+                        "fallback": '',
+                        "color": '#dddddd',
+                        "text": '',
+                        fields: [
+                            {
+                                title: 'project',
+                                value: item.project_id,
+                                short: true
+                            },
+                            {
+                                title: 'version',
+                                value: item.build_version,
+                                short: true
+                            },
+                            {
+                                title: 'user',
+                                value: '@'+item.user_name,
+                                short: true
+                            }
+                        ],
+                        ts: seconds
+                    });
             });
             // TODO if (!_.isNil(data.LastEvaluatedKey))
-            if (_.isEmpty(text)) {
-                text = 'You have no deployments.';
-            } else {
-                text = 'Deployment History:'+div+text;
-            }
+
             return callback(null, {
                 statusCode: 200,
-                body: JSON.stringify({
-                    response_type: "in_channel",
-                    text: text
-                })
+                body: JSON.stringify(message)
             });
         }
     });
@@ -381,27 +400,42 @@ functions.show_project = function(params, callback) {
                 }
             });
         } else {
-            var text = '';
-            var div = '';
+
+            // Notify slack
+            var message = {
+                response_type: "in_channel",
+                pretext: 'Build History',
+                attachments: []
+            };
+
             _.forEach(data.Items, function(item) {
-                text += div;
-                text += 'version ' + item.version + '\n';
-                text += 'commit ' + _.truncate(item.commit, {length: 6, omission: ''}) + '\n';
-                text += 'date ' + item.build_date + '\n';
-                div = '\n';
+                var d = new Date(item.build_date);
+                var seconds = d.getTime() / 1000;
+                message.attachments.push(
+                    {
+                        "fallback": '',
+                        "color": '#dddddd',
+                        "text": '',
+                        fields: [
+                            {
+                                title: 'version',
+                                value: item.version,
+                                short: true
+                            },
+                            {
+                                title: 'commit',
+                                value: _.truncate(item.commit, {length: 6, omission: ''}),
+                                short: true
+                            }
+                        ],
+                        ts: seconds
+                    });
             });
             // TODO if (!_.isNil(data.LastEvaluatedKey))
-            if (_.isEmpty(text)) {
-                text = 'You have no builds.';
-            } else {
-                text = 'Build History:'+div+text;
-            }
+
             return callback(null, {
                 statusCode: 200,
-                body: JSON.stringify({
-                    response_type: "in_channel",
-                    text: text
-                })
+                body: JSON.stringify(message)
             });
         }
     });

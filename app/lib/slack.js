@@ -106,10 +106,7 @@ functions.post_message = function(params, done) {
         },
         json: true,
         method: 'POST',
-        body: {
-            channel: params.channel,
-            text: params.text
-        }
+        body: params
     };
     console.log(JSON.stringify(options, null, 3));
     request(options, function(err, response, body) {

@@ -114,10 +114,20 @@ functions.handle = function(event, context) {
         function(project, next) {
             // Notify slack
             var text = 'Build '+ project.build_count + ' is ready - ' + project.project_id+'';
-            slack.post_message({
+            var d = new Date();
+            var seconds = d.getTime() / 1000;
+            var message = {
                 channel: project.channel,
-                text: text
-            }, next);
+                attachments: [
+                    {
+                        "fallback": text,
+                        "color": 'good',
+                        "text": text,
+                        "ts": seconds
+                    }
+                ]
+            };
+            slack.post_message(message, next);
         }
     ], function(err, results) {
         if (err) {

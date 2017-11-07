@@ -35,10 +35,22 @@ functions.handle = function(event, callback) {
                 });
             },
             function(data, next) {
-                slack.post_message({
+                // Notify slack
+                var text = 'Project creation failed - '+ data.Item.project_id;
+                var d = new Date();
+                var seconds = d.getTime() / 1000;
+                var message = {
                     channel: data.Item.channel,
-                    text: '*** Project creation failed - '+ data.Item.project_id+') ***'
-                }, next);
+                    attachments: [
+                        {
+                            "fallback": text,
+                            "color": 'danger',
+                            "text": text,
+                            "ts": seconds
+                        }
+                    ]
+                };
+                slack.post_message(message, next);
             }
         ], callback);
     } else if (_.isEqual(message.ResourceStatus, 'DELETE_COMPLETE') &&
@@ -58,10 +70,22 @@ functions.handle = function(event, callback) {
                 });
             },
             function(data, next) {
-                slack.post_message({
+                // Notify slack
+                var text = 'Project deleted - '+ data.Item.project_id;
+                var d = new Date();
+                var seconds = d.getTime() / 1000;
+                var message = {
                     channel: data.Item.channel,
-                    text: 'Project deleted - '+ data.Item.project_id
-                }, next);
+                    attachments: [
+                        {
+                            "fallback": text,
+                            "color": 'good',
+                            "text": text,
+                            "ts": seconds
+                        }
+                    ]
+                };
+                slack.post_message(message, next);
             }
         ], callback);
     } else if (_.isEqual(message.ResourceStatus, 'CREATE_COMPLETE') &&
@@ -75,10 +99,22 @@ functions.handle = function(event, callback) {
                 }, next);
             },
             function(data, next) {
-                slack.post_message({
+                // Notify slack
+                var text = 'Project created - '+ data.Item.project_id;
+                var d = new Date();
+                var seconds = d.getTime() / 1000;
+                var message = {
                     channel: data.Item.channel,
-                    text: 'Project created - '+ data.Item.project_id+')'
-                }, next);
+                    attachments: [
+                        {
+                            "fallback": text,
+                            "color": 'good',
+                            "text": text,
+                            "ts": seconds
+                        }
+                    ]
+                };
+                slack.post_message(message, next);
             }
         ], callback);
     } else {

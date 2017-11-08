@@ -4,6 +4,7 @@ const _ = require('lodash');
 const slack = require('./slack');
 const dao = require('./dao');
 const async = require('async');
+var s3 = require('./s3');
 
 var functions = {};
 
@@ -21,15 +22,16 @@ functions.handle = function(event, callback) {
     if (_.isEqual(message.ResourceStatus, 'CREATE_FAILED') &&
         _.isEqual(message.ResourceType, 'AWS::CloudFormation::Stack')) {
         // Tell user it didn't work.
+        const project_id = _.replace(message.LogicalResourceId, 'functionci-', '');
         async.waterfall([
             function(next) {
                 dao.get_project({
-                    project_id: _.replace(message.LogicalResourceId, 'functionci-', '')
+                    project_id: project_id
                 }, next);
             },
             function(data, next) {
                 dao.delete_project({
-                    project_id: _.replace(message.LogicalResourceId, 'functionci-', '')
+                    project_id: project_id
                 }, function(err, results) {
                     next(err, data);
                 });
@@ -55,17 +57,26 @@ functions.handle = function(event, callback) {
         ], callback);
     } else if (_.isEqual(message.ResourceStatus, 'DELETE_COMPLETE') &&
         _.isEqual(message.ResourceType, 'AWS::CloudFormation::Stack')) {
-        // Tell user it didn't work.
+        const project_id = _.replace(message.LogicalResourceId, 'functionci-', '');
         async.waterfall([
             function(next) {
                 dao.get_project({
-                    project_id: _.replace(message.LogicalResourceId, 'functionci-', '')
+                    project_id: project_id
                 }, next);
             },
             function(data, next) {
                 dao.delete_project({
-                    project_id: _.replace(message.LogicalResourceId, 'functionci-', '')
+                    project_id: project_id
                 }, function(err, results) {
+                    next(err, data);
+                });
+            },
+            function(data, next) {
+                s3.delete_with_prefix({
+                    bucket: process.env.ArtifactsBucket,
+                    prefix: project_id
+                },
+                function(err, results) {
                     next(err, data);
                 });
             },
@@ -92,10 +103,11 @@ functions.handle = function(event, callback) {
         _.isEqual(message.ResourceType, 'AWS::CloudFormation::Stack')) {
         // Add to DB.
         // Tell user it worked.
+        const project_id = _.replace(message.LogicalResourceId, 'functionci-', '');
         async.waterfall([
             function(next) {
                 dao.get_project({
-                    project_id: _.replace(message.LogicalResourceId, 'functionci-', '')
+                    project_id: project_id
                 }, next);
             },
             function(data, next) {

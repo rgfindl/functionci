@@ -3,11 +3,11 @@
 const _ = require('lodash');
 const slack = require('./slack');
 const dao = require('./dao');
+const s3 = require('./s3');
 const async = require('async');
 
 const AWS = require('aws-sdk');
 const codepipeline = new AWS.CodePipeline();
-const s3 = new AWS.S3();
 
 // Notify AWS CodePipeline of a successful job
 var putJobSuccess = function(jobId, message, context) {
@@ -41,17 +41,6 @@ var putJobFailure = function(jobId, message, context) {
 };
 
 var functions = {};
-
-functions.copy_build_artifact = function(bucket, source_key, dest_key, callback) {
-    console.log('copy_build_artifact');
-    var params = {
-        Bucket: bucket,
-        CopySource: '/'+bucket+'/'+source_key,
-        Key: dest_key
-    };
-    console.log(JSON.stringify(params));
-    s3.copyObject(params, callback);
-};
 
 functions.handle = function(event, context) {
     console.log('handle_codepipeline');
@@ -91,7 +80,7 @@ functions.handle = function(event, context) {
         },
         function(project, next) {
             // Move the zip file.
-            functions.copy_build_artifact(bucket, key, project_id+'/'+project_id+'-'+project.build_count, function(err, results) {
+            s3.copy(bucket, key, project_id+'/'+project_id+'-'+project.build_count, function(err, results) {
                 if (err) return next(err);
                 next(null, project);
             });

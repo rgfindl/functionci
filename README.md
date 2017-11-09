@@ -28,13 +28,13 @@ Fork this repo and install FunctionCI in your AWS account, then start managing y
 Use the `/fn create project` Slack command to create a new build project.
 
 <p align="left">
-  <img width="60%" src="docs/create-dialog.png">
+  <img src="docs/create-dialog.png">
 </p>
 
 Once your build version is ready...
 
 <p align="left">
-  <img width="60%" src="docs/build-messages.png">
+  <img src="docs/build-messages.png">
 </p>
 
 Deploy it using the `/fn deploy fn <fn-name> <project-name> <version>` Slack command.
@@ -109,7 +109,7 @@ Example:
 The `project_id` == `functionci-demo-master`
 
 <p align="left">
-  <img width="75%" src="docs/show-project.png">
+  <img src="docs/show-project.png">
 </p>
 
 ### /fn show projects
@@ -137,7 +137,7 @@ Show a function and all its deployment history.
 Ex: `/fn show fn demo`
 
 <p align="left">
-  <img width="75%" src="docs/show-fn.png">
+  <img src="docs/show-fn.png">
 </p>
 
 ### /fn show fns

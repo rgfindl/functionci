@@ -35,7 +35,16 @@ functions.add_fn = function(params, callback) {
         short_name: short_name,
         arn: arn
     }, function(err, data) {
-        if (err) {
+        if (err && _.isString(err) && _.includes(err, 'already exists')) {
+
+            return callback(null, {
+                statusCode: 200,
+                body: JSON.stringify({
+                    response_type: "in_channel",
+                    text: err
+                })
+            });
+        } else if (err) {
             console.log(err);
             return callback(null, {
                 statusCode: 200,

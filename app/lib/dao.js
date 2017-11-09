@@ -16,7 +16,12 @@ functions.put_project = function(input, done) {
         ConditionExpression: "attribute_not_exists(build_count)"
     };
     console.log(JSON.stringify(params));
-    docClient.put(params, done);
+    docClient.put(params, function(err, data) {
+        if (err && _.isEqual(err.message, 'The conditional request failed'))
+            return done('Project already exists.', null);
+        else if (err) return done(err, null);
+        else return done(null, data);
+    });
 };
 
 functions.update_project_build_count = function(input, done) {
@@ -103,7 +108,12 @@ functions.put_fn = function(input, done) {
               ConditionExpression: "attribute_not_exists(arn)"
           };
           console.log(JSON.stringify(params));
-          docClient.put(params, next);
+          docClient.put(params, function(err, data) {
+              if (err && _.isEqual(err.message, 'The conditional request failed'))
+                  return done('Function already exists.', null);
+              else if (err) return done(err, null);
+              else return done(null, data);
+          });
       },
       function(results, next) {
           input.hash_key = 'function';
@@ -114,7 +124,12 @@ functions.put_fn = function(input, done) {
               ConditionExpression: "attribute_not_exists(arn)"
           };
           console.log(JSON.stringify(params));
-          docClient.put(params, next);
+          docClient.put(params, function(err, data) {
+              if (err && _.isEqual(err.message, 'The conditional request failed'))
+                  return done('Function already exists.', null);
+              else if (err) return done(err, null);
+              else return done(null, data);
+          });
       }
   ], done);
 };

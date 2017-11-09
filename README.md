@@ -45,6 +45,8 @@ Deploy it using the `/fn deploy fn <fn-name> <project-name> <version>` Slack com
 3. Install the [kms](kms) stack.
 4. Install the [app](app) stack.
 
+** If you fix or add anything please submit a Pull Request!!!
+
 ## Commands
 - [/fn create project](#fn-create-project)
 - [/fn show projeect](#fn-show-project)

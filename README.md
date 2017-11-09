@@ -40,11 +40,10 @@ Once your build version is ready...
 Deploy it using the `/fn deploy fn <fn-name> <project-name> <version>` Slack command.
 
 ## Setup
-1. Create the `kms` stack.
-2. Configure your Slack app.
-3. Encrypt your Slack params.
-4. Create the `app` stack.
-5. Add the URLS to your Slack app.
+1. Fork and clone this repo.
+2. Install [CIM](https://github.com/thestackshack/cim) (CloudFormation Utility)
+3. Install the [kms](kms) stack.
+4. Install the [app](app) stack.
 
 ## Commands
 - [/fn create project](#fn-create-project)
@@ -187,8 +186,3 @@ Now we are ready to deploy our build artifact to our Lambda.
 <p align="left">
   <img width="75%" src="docs/FunctionCI-Deploy-Fn.png">
 </p>
-
-## TODO
-- Add howto doc with setup guide and command guide
-- Lambda Versions & Aliases???
-- Improve tests

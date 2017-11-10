@@ -42,8 +42,8 @@ Deploy it using the `/fn deploy fn <fn-name> <project-name> <version>` Slack com
 ## Setup
 1. Fork and clone this repo.
 2. Install [CIM](https://github.com/thestackshack/cim) (CloudFormation Utility)
-3. Install the [kms](kms) stack.
-4. Install the [app](app) stack.
+3. Install the [kms](kms/README.md) stack.
+4. Install the [app](app/README.md) stack.
 
 ** If you fix or add anything please submit a Pull Request!!!
 

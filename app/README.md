@@ -83,4 +83,4 @@ Now you're ready to start using your FunctionCI Slack bot.
 
 If you want to use your bot in private channels you'll have to invite it.  `/invite functionci`.
 
-Check out the [FunctionCI Commands](../#commands) to get started building and deploying your Lambda's. 
+Check out the [FunctionCI Commands](../README.md#commands) to get started building and deploying your Lambda's. 

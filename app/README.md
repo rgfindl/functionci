@@ -43,6 +43,8 @@ Create a [Github personal access token](https://github.com/settings/tokens) with
 ## Step 6 - Install the stack
 Install the app stack using the following [CIM](https://github.com/thestackshack/cim) command: `cim stack-up`.
 
+Deploy the Lambda using the following [CIM](https://github.com/thestackshack/cim) command: `cim deploy-lambda`.
+
 Record the stack outputs, you will need them in the next 2 steps:
 * SlackInteractiveComponentsUrl
 * SlackSlashCommandsUrl
@@ -84,3 +86,5 @@ Now you're ready to start using your FunctionCI Slack bot.
 If you want to use your bot in private channels you'll have to invite it.  `/invite functionci`.
 
 Check out the [FunctionCI Commands](../README.md#commands) to get started building and deploying your Lambda's. 
+
+Here is an example project: https://github.com/rgfindl/functionci-demo

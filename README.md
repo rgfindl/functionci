@@ -39,6 +39,8 @@ Once your build version is ready...
 
 Deploy it using the `/fn deploy fn <fn-name> <project-name> <version>` Slack command.
 
+Here is an example project: https://github.com/rgfindl/functionci-demo
+
 ## Setup
 1. Fork and clone this repo.
 2. Install [CIM](https://github.com/thestackshack/cim) (CloudFormation Utility)

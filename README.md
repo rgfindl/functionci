@@ -3,13 +3,13 @@
 </p>
 
 # Function CI
-FunctionCI is an open source Continuous Integration tool for AWS Lambda's. 
+FunctionCI is an open source Continuous Integration tool for AWS Lambdas. 
 
 Builds are done by AWS CodeBuild and AWS CodePipeline.  
 
 Receive build notifications via Slack.  Deploy via Slack.  View build and deployment audit trails via Slack.
 
-Fork this repo and install FunctionCI in your AWS account, then start managing your Lambda's properly.  
+Fork this repo and install FunctionCI in your AWS account, then start managing your Lambdas properly.  
 
 ## Features
 * Serverless - Function CI only costs money when you use it

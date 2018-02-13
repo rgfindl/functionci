@@ -46,6 +46,8 @@ lambda:
   functions:
     -
       function: ${stack.outputs.LambdaFunction}
+      aliases:
+        PROD: ${stack.outputs.LambdaFunctionAlias}
       zip_file: index.zip
   deploy:
     phases:

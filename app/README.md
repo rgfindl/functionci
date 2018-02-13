@@ -41,9 +41,18 @@ Create a [Github personal access token](https://github.com/settings/tokens) with
 
 
 ## Step 6 - Install the stack
-Install the app stack using the following [CIM](https://github.com/thestackshack/cim) command: `cim stack-up`.
+Install the app stack using the following [CIM](https://github.com/thestackshack/cim) command (again, don't forget the dot in the end): 
+```
+cim stack-up .
+```
 
-Deploy the Lambda using the following [CIM](https://github.com/thestackshack/cim) command: `cim deploy-lambda`.
+Deploy the Lambda using the following [CIM](https://github.com/thestackshack/cim) command: 
+```
+cim lambda-publish
+```
+Note 
+1. `cim lambda-deploy` won't work since it will keep asking you alias / version even provided in cli and/or specified in cloudformation.yml. 
+2. Add `export AWS_REGION=<your aws region here>` and `export AWS_PROFILE=<your aws profile>` in case CIM keeps complaining region is missing on publish lambda.
 
 Record the stack outputs, you will need them in the next 2 steps:
 * SlackInteractiveComponentsUrl

@@ -3,7 +3,10 @@ Creates a KMS Key to use when encrypting your secret credentials.
 
 ## Create Stack
 - First update [_cim.yml](_cim.yml) and add the IAM users you wish to have access to encrypt and decrypt.  Keep the `root` user.  Make sure you use your AWS account ID.
-- Create the stack: `cim stack-up`.
+- Create the stack with (don't forget the dot in the end of line):
+  ```
+  cim stack-up .
+  ``` 
 - Record the KMS Key ID in the stack output.
 
 ## Encrypt Secrets

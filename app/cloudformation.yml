@@ -280,6 +280,24 @@ Resources:
           ArtifactsBucket: !Ref ArtifactsBucket
 
   #
+  # 'PROD' Alias -> Version 1
+  #
+  LambdaFunctionAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      FunctionName: !Ref LambdaFunction
+      FunctionVersion: !GetAtt LambdaFunctionVersion.Version
+      Name: 'PROD'
+  
+  #
+  # Create Lambda Version
+  #
+  LambdaFunctionVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref LambdaFunction
+
+  #
   # Create the API Gateway
   #
   RestApi:

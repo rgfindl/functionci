@@ -14,9 +14,10 @@ functions.channels_list = function(params, done) {
             'Authorization':'Bearer '+process.env.SlackBotOAuthToken
         },
         json: true,
-        method: 'POST',
-        body: {
-            limit: params.limit
+        method: 'GET',
+        qs: {
+            limit: params.limit,
+            exclude_archived: 1
         }
     };
     if (params.cursor) {
@@ -36,7 +37,10 @@ functions.groups_list = function(params, done) {
             'Authorization':'Bearer '+process.env.SlackBotOAuthToken
         },
         json: true,
-        method: 'GET'
+        method: 'GET',
+        qs: {
+            exclude_archived: 1
+        }
     };
     request(options, function(err, response, body) {
         done(err, body);
@@ -50,7 +54,7 @@ functions.fetch_all_channels = function(params, done) {
         function(channels, next_waterfall) {
             var complete = false;
             var params = {
-                limit: 200
+                limit: 100
             };
             async.until(function() {
                 return complete;

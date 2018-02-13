@@ -47,6 +47,10 @@ Here is an example project: https://github.com/rgfindl/functionci-demo
 3. Install the [kms](kms/README.md) stack.
 4. Install the [app](app/README.md) stack.
 
+Note:
+1. You will need 3 unique buckets (2 _cim.yml + 1 in cloudformation.yml). Currently if creation failed, CloudFormation / CIM won't automatically clean up for you since out of scope of CloudFormation. You have to manually delete them yourself.
+2. Bear in mind KMS key would take minimum 7 days to delete even nothing refers to that key, in case you have KMS stack creation failure. Search and edit cloudformation.yml with different name would avoid this.
+
 ** If you fix or add anything please submit a Pull Request!!!
 
 ## Commands
